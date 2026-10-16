@@ -9,6 +9,7 @@ import {
   Vote,
   UserCheck
 } from 'lucide-react';
+import { SupabaseStatusBadge } from '../common/SupabaseStatusBadge';
 
 export const Navbar: React.FC = () => {
   const { tab, setTab, user } = useApp();
@@ -87,17 +88,22 @@ export const Navbar: React.FC = () => {
           )}
         </div>
 
-        {/* User Info Badge (화면 넘김 버튼이 아닌 상태 카드) */}
-        <div className="flex items-center gap-2.5 px-3 py-1.5 rounded-xl bg-slate-800/40 border border-slate-800 text-left select-none">
-          <div className="w-7 h-7 rounded-lg bg-indigo-500/20 border border-indigo-500/40 flex items-center justify-center text-sm">
-            {user.avatarIcon}
-          </div>
-          <div className="hidden sm:block">
-            <div className="text-xs font-bold text-slate-200 leading-tight">
-              {user.gamerTag}
+        {/* Right Action & Status Group */}
+        <div className="flex items-center gap-2.5">
+          <SupabaseStatusBadge />
+
+          {/* User Info Badge */}
+          <div className="flex items-center gap-2.5 px-3 py-1.5 rounded-xl bg-slate-800/40 border border-slate-800 text-left select-none">
+            <div className="w-7 h-7 rounded-lg bg-indigo-500/20 border border-indigo-500/40 flex items-center justify-center text-sm">
+              {user.avatarIcon}
             </div>
-            <div className="text-[10px] text-slate-400 leading-tight">
-              Lv.12 학생 자치원
+            <div className="hidden sm:block">
+              <div className="text-xs font-bold text-slate-200 leading-tight">
+                {user.gamerTag}
+              </div>
+              <div className="text-[10px] text-slate-400 leading-tight">
+                Lv.12 학생 자치원
+              </div>
             </div>
           </div>
         </div>

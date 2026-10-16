@@ -16,6 +16,7 @@ import {
   INITIAL_PETITIONS,
   INITIAL_VOTES
 } from '../data/mockData';
+import { SupabaseService } from '../services/supabaseService';
 
 interface AppContextType {
   tab: MainTab;
@@ -23,6 +24,11 @@ interface AppContextType {
   user: UserProfile;
   updateUser: (updater: Partial<UserProfile>) => void;
   
+  // Supabase Backend
+  isSupabaseConnected: boolean;
+  isLoadingBackend: boolean;
+  refreshFromBackend: () => Promise<void>;
+
   // Hobby
   posts: HobbyPost[];
   selectedCategory: string | null;
@@ -78,6 +84,10 @@ const AppContext = createContext<AppContextType | undefined>(undefined);
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [tab, setTab] = useState<MainTab>('home');
 
+  // Supabase Connection State
+  const [isSupabaseConnected] = useState<boolean>(SupabaseService.isConfigured());
+  const [isLoadingBackend, setIsLoadingBackend] = useState<boolean>(false);
+
   // User Profile
   const [user, setUser] = useState<UserProfile>(() => {
     const saved = localStorage.getItem('slx_user');
@@ -92,7 +102,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [selectedPost, setSelectedPost] = useState<HobbyPost | null>(null);
 
-  // Liked Posts (User can like each post only once)
+  // Liked Posts
   const [likedPostIds, setLikedPostIds] = useState<string[]>(() => {
     const saved = localStorage.getItem('slx_liked_posts');
     return saved ? JSON.parse(saved) : [];
@@ -131,7 +141,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   });
   const [selectedVoteId, setSelectedVoteId] = useState<string>('vote-01');
 
-  // Persistence
+  // Persistence to LocalStorage (as cache and fallback)
   useEffect(() => {
     localStorage.setItem('slx_user', JSON.stringify(user));
   }, [user]);
@@ -156,6 +166,40 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     localStorage.setItem('slx_votes', JSON.stringify(votes));
   }, [votes]);
 
+  // Initial Sync from Supabase Backend
+  const refreshFromBackend = async () => {
+    if (!SupabaseService.isConfigured()) return;
+    setIsLoadingBackend(true);
+    try {
+      const [backendPosts, backendQuests, backendPetitions, backendVotes, backendLikedPostIds, backendProfile] =
+        await Promise.all([
+          SupabaseService.fetchPosts(),
+          SupabaseService.fetchQuests(),
+          SupabaseService.fetchPetitions(),
+          SupabaseService.fetchVotes(user.id),
+          SupabaseService.fetchLikedPostIds(user.id),
+          SupabaseService.fetchProfile(user.id)
+        ]);
+
+      if (backendPosts.length > 0) setPosts(backendPosts);
+      if (backendQuests.length > 0) setQuests(backendQuests);
+      if (backendPetitions.length > 0) setPetitions(backendPetitions);
+      if (backendVotes.length > 0) setVotes(backendVotes);
+      if (backendLikedPostIds.length > 0) setLikedPostIds(backendLikedPostIds);
+      if (backendProfile) setUser(backendProfile);
+    } catch (err) {
+      console.warn('[Supabase] Initial sync failed, fallback to local state', err);
+    } finally {
+      setIsLoadingBackend(false);
+    }
+  };
+
+  useEffect(() => {
+    if (isSupabaseConnected) {
+      refreshFromBackend();
+    }
+  }, [isSupabaseConnected]);
+
   const triggerConfetti = () => {
     try {
       confetti({
@@ -169,7 +213,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const updateUser = (updater: Partial<UserProfile>) => {
-    setUser((prev) => ({ ...prev, ...updater }));
+    const updated = { ...user, ...updater };
+    setUser(updated);
+    if (isSupabaseConnected) {
+      SupabaseService.upsertProfile(updated).catch(console.error);
+    }
   };
 
   const addPost = (newPostData: Omit<HobbyPost, 'id' | 'likes' | 'views' | 'createdAt' | 'comments'>) => {
@@ -183,6 +231,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     };
     setPosts((prev) => [newPost, ...prev]);
     triggerConfetti();
+
+    if (isSupabaseConnected) {
+      SupabaseService.createPost(newPostData).then((created) => {
+        if (created) {
+          setPosts((prev) => prev.map((p) => (p.id === newPost.id ? created : p)));
+        }
+      }).catch(console.error);
+    }
   };
 
   const hasLikedPost = (id: string) => likedPostIds.includes(id);
@@ -211,6 +267,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         setSelectedPost((prev) => (prev ? { ...prev, likes: prev.likes + 1 } : null));
       }
       triggerConfetti();
+    }
+
+    if (isSupabaseConnected) {
+      SupabaseService.toggleLikePost(id, user.id).then(({ newLikes }) => {
+        setPosts((prev) => prev.map((p) => (p.id === id ? { ...p, likes: newLikes } : p)));
+      }).catch(console.error);
     }
   };
 
@@ -249,6 +311,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           : null
       );
     }
+
+    if (isSupabaseConnected) {
+      SupabaseService.addComment(postId, newComment).catch(console.error);
+    }
   };
 
   const joinQuest = (questId?: string) => {
@@ -284,6 +350,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
 
     triggerConfetti();
+
+    if (isSupabaseConnected) {
+      SupabaseService.joinQuest(targetId, user.realName).catch(console.error);
+    }
   };
 
   const leaveQuest = (questId?: string) => {
@@ -314,6 +384,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         };
       });
     }
+
+    if (isSupabaseConnected) {
+      SupabaseService.leaveQuest(targetId, user.realName).catch(console.error);
+    }
   };
 
   const addQuest = (
@@ -329,22 +403,27 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setQuests((prev) => [newQuest, ...prev]);
     setSelectedQuest(newQuest);
     triggerConfetti();
+
+    if (isSupabaseConnected) {
+      SupabaseService.createQuest(newQuest).catch(console.error);
+    }
   };
 
   const updateQuestForm = (title: string, locationAndTime: string, maxCount: number) => {
     setQuests((prev) => {
       if (prev.length === 0) return prev;
       const [first, ...rest] = prev;
-      return [
-        {
-          ...first,
-          title,
-          locationAndTime,
-          maxCount,
-          currentCount: Math.min(first.currentCount, maxCount)
-        },
-        ...rest
-      ];
+      const updatedFirst = {
+        ...first,
+        title,
+        locationAndTime,
+        maxCount,
+        currentCount: Math.min(first.currentCount, maxCount)
+      };
+      if (isSupabaseConnected) {
+        SupabaseService.createQuest(updatedFirst).catch(console.error);
+      }
+      return [updatedFirst, ...rest];
     });
     triggerConfetti();
   };
@@ -381,13 +460,17 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setPetitions((prev) => [newPet, ...prev]);
     setSelectedPetitionId(newPet.id);
     triggerConfetti();
+
+    if (isSupabaseConnected) {
+      SupabaseService.createPetition(newPet).catch(console.error);
+    }
   };
 
   const castVote = (topicId: string, optionId: string): boolean => {
     const target = votes.find((t) => t.id === topicId);
     if (!target) return false;
 
-    // 이미 투표를 완료한 안건인 경우: 투표수 증가 및 임팩트 효과 차단
+    // 이미 투표를 완료한 안건인 경우 차단
     if (target.userVotedOptionId) {
       return false;
     }
@@ -411,8 +494,16 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       })
     );
 
-    // 실제 투표 수가 증가할 때만 임팩트 발동!
     triggerConfetti();
+
+    if (isSupabaseConnected) {
+      SupabaseService.castVote(topicId, optionId, user.id).then((res) => {
+        if (res.updatedVotes) {
+          setVotes(res.updatedVotes);
+        }
+      }).catch(console.error);
+    }
+
     return true;
   };
 
@@ -429,6 +520,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         setTab,
         user,
         updateUser,
+        isSupabaseConnected,
+        isLoadingBackend,
+        refreshFromBackend,
         posts,
         selectedCategory,
         setSelectedCategory,
