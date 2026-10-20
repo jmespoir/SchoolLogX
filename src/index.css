@@ -1,6 +1,11 @@
 @import "tailwindcss";
 
 @layer base {
+  /* Hide standard OS mouse cursor completely; only custom glowing blue dot impact is visible */
+  *, *::before, *::after, html, body, button, a, input, select, textarea, [role="button"] {
+    cursor: none !important;
+  }
+
   body {
     background-color: #0d111e;
     color: #f1f5f9;

@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 
 interface TrailDot {
   x: number;
@@ -8,7 +8,7 @@ interface TrailDot {
   color: string;
 }
 
-interface SimplePulse {
+interface ClickPulse {
   x: number;
   y: number;
   radius: number;
@@ -18,10 +18,13 @@ interface SimplePulse {
 export const InteractiveCursor: React.FC = () => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const dotRef = useRef<HTMLDivElement | null>(null);
+  const ringRef = useRef<HTMLDivElement | null>(null);
   const trail = useRef<TrailDot[]>([]);
-  const pulses = useRef<SimplePulse[]>([]);
+  const pulses = useRef<ClickPulse[]>([]);
   const mousePos = useRef({ x: -100, y: -100 });
   const prevMousePos = useRef({ x: -100, y: -100 });
+  const [isHovering, setIsHovering] = useState(false);
+  const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -40,24 +43,37 @@ export const InteractiveCursor: React.FC = () => {
 
     const onMouseMove = (e: MouseEvent) => {
       mousePos.current = { x: e.clientX, y: e.clientY };
+      setIsVisible(true);
 
+      // Move center blue dot with exact pinpoint alignment
       if (dotRef.current) {
-        dotRef.current.style.transform = `translate3d(${e.clientX - 4}px, ${e.clientY - 4}px, 0)`;
-        dotRef.current.style.opacity = '1';
+        dotRef.current.style.transform = `translate3d(${e.clientX}px, ${e.clientY}px, 0)`;
+      }
+      if (ringRef.current) {
+        ringRef.current.style.transform = `translate3d(${e.clientX}px, ${e.clientY}px, 0)`;
+      }
+
+      // Check if hovering interactive target
+      const target = e.target as HTMLElement | null;
+      if (target) {
+        const isInteractive = Boolean(
+          target.closest('button, a, input, select, textarea, [role="button"], .cursor-pointer')
+        );
+        setIsHovering(isInteractive);
       }
 
       const dx = e.clientX - prevMousePos.current.x;
       const dy = e.clientY - prevMousePos.current.y;
       const dist = Math.sqrt(dx * dx + dy * dy);
 
-      // Only add subtle minimal trail dot when moving smoothly
-      if (dist > 6) {
+      // Add gentle blue particle trail
+      if (dist > 5) {
         trail.current.push({
           x: e.clientX,
           y: e.clientY,
-          size: Math.random() * 2 + 1.5,
-          alpha: 0.6,
-          color: '#38bdf8' // Clean subtle cyan
+          size: Math.random() * 2 + 1.2,
+          alpha: 0.7,
+          color: '#38bdf8' // Electric neon sky blue
         });
       }
 
@@ -65,28 +81,38 @@ export const InteractiveCursor: React.FC = () => {
     };
 
     const onClick = (e: MouseEvent) => {
-      // Small, elegant, non-intrusive click pulse
+      // Crisp electric blue ripple pulse on click
       pulses.current.push({
         x: e.clientX,
         y: e.clientY,
-        radius: 2,
-        alpha: 0.8
+        radius: 3,
+        alpha: 0.9
       });
+    };
+
+    const onMouseLeave = () => {
+      setIsVisible(false);
+    };
+
+    const onMouseEnter = () => {
+      setIsVisible(true);
     };
 
     window.addEventListener('mousemove', onMouseMove);
     window.addEventListener('click', onClick);
+    document.addEventListener('mouseleave', onMouseLeave);
+    document.addEventListener('mouseenter', onMouseEnter);
 
     const render = () => {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-      // 1. Render gentle click pulse
+      // 1. Render gentle blue click ripples
       for (let i = pulses.current.length - 1; i >= 0; i--) {
         const p = pulses.current[i];
-        p.radius += 1.8;
-        p.alpha -= 0.04;
+        p.radius += 2.0;
+        p.alpha -= 0.045;
 
-        if (p.alpha <= 0 || p.radius >= 26) {
+        if (p.alpha <= 0 || p.radius >= 30) {
           pulses.current.splice(i, 1);
           continue;
         }
@@ -95,18 +121,20 @@ export const InteractiveCursor: React.FC = () => {
         ctx.beginPath();
         ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
         ctx.strokeStyle = `rgba(56, 189, 248, ${p.alpha})`;
-        ctx.lineWidth = 1.5;
+        ctx.lineWidth = 1.8;
+        ctx.shadowColor = '#0284c7';
+        ctx.shadowBlur = 8;
         ctx.stroke();
         ctx.restore();
       }
 
-      // 2. Render subtle minimalist trail
+      // 2. Render subtle electric blue particle trail
       for (let i = trail.current.length - 1; i >= 0; i--) {
         const t = trail.current[i];
-        t.alpha -= 0.035;
-        t.size *= 0.95;
+        t.alpha -= 0.038;
+        t.size *= 0.96;
 
-        if (t.alpha <= 0 || t.size <= 0.4) {
+        if (t.alpha <= 0 || t.size <= 0.3) {
           trail.current.splice(i, 1);
           continue;
         }
@@ -116,13 +144,13 @@ export const InteractiveCursor: React.FC = () => {
         ctx.arc(t.x, t.y, t.size, 0, Math.PI * 2);
         ctx.fillStyle = `rgba(56, 189, 248, ${t.alpha})`;
         ctx.shadowColor = '#38bdf8';
-        ctx.shadowBlur = 4;
+        ctx.shadowBlur = 6;
         ctx.fill();
         ctx.restore();
       }
 
-      if (trail.current.length > 30) {
-        trail.current.splice(0, trail.current.length - 30);
+      if (trail.current.length > 25) {
+        trail.current.splice(0, trail.current.length - 25);
       }
 
       animId = requestAnimationFrame(render);
@@ -134,21 +162,40 @@ export const InteractiveCursor: React.FC = () => {
       window.removeEventListener('resize', resize);
       window.removeEventListener('mousemove', onMouseMove);
       window.removeEventListener('click', onClick);
+      document.removeEventListener('mouseleave', onMouseLeave);
+      document.removeEventListener('mouseenter', onMouseEnter);
       cancelAnimationFrame(animId);
     };
   }, []);
 
   return (
     <>
-      {/* Sleek minimal cursor center dot */}
+      {/* Primary Vibrant Neon Blue Impact Dot (Centered pinpoint) */}
       <div
         ref={dotRef}
-        className="pointer-events-none fixed top-0 left-0 w-2 h-2 rounded-full bg-cyan-400 shadow-[0_0_8px_#38bdf8] z-50 transition-opacity duration-150 opacity-0 will-change-transform"
+        className={`pointer-events-none fixed top-0 left-0 -ml-[4px] -mt-[4px] rounded-full z-[99999] transition-all duration-75 will-change-transform ${
+          isVisible ? 'opacity-100' : 'opacity-0'
+        } ${
+          isHovering
+            ? 'w-3 h-3 -ml-[6px] -mt-[6px] bg-cyan-300 shadow-[0_0_12px_#38bdf8,0_0_24px_#0284c7]'
+            : 'w-2 h-2 -ml-[4px] -mt-[4px] bg-cyan-400 shadow-[0_0_8px_#38bdf8,0_0_16px_#0284c7]'
+        }`}
       />
-      {/* Lightweight canvas for gentle trails & click ripples */}
+
+      {/* Subtle outer neon ring when hovering clickable elements */}
+      <div
+        ref={ringRef}
+        className={`pointer-events-none fixed top-0 left-0 -ml-[12px] -mt-[12px] w-6 h-6 rounded-full border border-cyan-400/60 z-[99998] transition-all duration-150 will-change-transform ${
+          isVisible && isHovering
+            ? 'opacity-80 scale-100'
+            : 'opacity-0 scale-50'
+        }`}
+      />
+
+      {/* Lightweight canvas for electric blue click ripples & soft trails */}
       <canvas
         ref={canvasRef}
-        className="pointer-events-none fixed inset-0 z-40 w-full h-full"
+        className="pointer-events-none fixed inset-0 z-[99997] w-full h-full"
       />
     </>
   );

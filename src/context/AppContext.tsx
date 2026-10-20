@@ -17,6 +17,7 @@ import {
   INITIAL_VOTES
 } from '../data/mockData';
 import { SupabaseService } from '../services/supabaseService';
+import { supabase } from '../lib/supabase';
 
 interface AppContextType {
   tab: MainTab;
@@ -75,6 +76,8 @@ interface AppContextType {
   selectedVote: VoteTopic;
   setSelectedVoteId: (id: string) => void;
   castVote: (topicId: string, optionId: string) => boolean;
+  updateVoteTopic: (topicId: string, title: string, opt1Name: string, opt2Name: string) => void;
+  createVoteTopic: (title: string, opt1Name: string, opt2Name: string, remainingTime?: string) => void;
 
   triggerConfetti: () => void;
 }
@@ -507,6 +510,87 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return true;
   };
 
+  const updateVoteTopic = (topicId: string, title: string, opt1Name: string, opt2Name: string) => {
+    setVotes((prev) =>
+      prev.map((t) => {
+        if (t.id !== topicId) return t;
+        return {
+          ...t,
+          title: title.trim() || t.title,
+          options: [
+            { ...t.options[0], name: opt1Name.trim() || t.options[0].name },
+            { ...t.options[1], name: opt2Name.trim() || t.options[1].name }
+          ]
+        };
+      })
+    );
+    triggerConfetti();
+
+    if (isSupabaseConnected && supabase) {
+      (async () => {
+        try {
+          await supabase.from('votes').update({ title: title.trim() }).eq('id', topicId);
+          const target = votes.find((v) => v.id === topicId);
+          if (target) {
+            await supabase.from('vote_options').update({ label: opt1Name.trim() }).eq('id', target.options[0].id);
+            await supabase.from('vote_options').update({ label: opt2Name.trim() }).eq('id', target.options[1].id);
+          }
+        } catch (err) {
+          console.error(err);
+        }
+      })();
+    }
+  };
+
+  const createVoteTopic = (title: string, opt1Name: string, opt2Name: string, remainingTime: string = 'D-7 남음') => {
+    const newId = `vote-${Date.now()}`;
+    const newTopic: VoteTopic = {
+      id: newId,
+      numberTag: `안건 #${votes.length + 1 < 10 ? '0' : ''}${votes.length + 1}`,
+      isHot: false,
+      title: title.trim(),
+      statusText: '진행중',
+      remainingTime: remainingTime || 'D-7 남음',
+      options: [
+        {
+          id: `${newId}-opt-1`,
+          name: opt1Name.trim(),
+          votes: 0
+        },
+        {
+          id: `${newId}-opt-2`,
+          name: opt2Name.trim(),
+          votes: 0
+        }
+      ]
+    };
+    setVotes((prev) => [newTopic, ...prev]);
+    setSelectedVoteId(newId);
+    triggerConfetti();
+
+    if (isSupabaseConnected && supabase) {
+      (async () => {
+        try {
+          await supabase.from('votes').insert({
+            id: newId,
+            title: title.trim(),
+            category: '학생회 자치',
+            d_day: remainingTime,
+            is_hot: false,
+            total_votes: 0
+          });
+
+          await supabase.from('vote_options').insert([
+            { id: `${newId}-opt-1`, vote_id: newId, label: opt1Name.trim(), votes: 0, percent: 50 },
+            { id: `${newId}-opt-2`, vote_id: newId, label: opt2Name.trim(), votes: 0, percent: 50 }
+          ]);
+        } catch (err) {
+          console.error(err);
+        }
+      })();
+    }
+  };
+
   const selectedPetition =
     petitions.find((p) => p.id === selectedPetitionId) || petitions[0];
 
@@ -554,6 +638,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         selectedVote,
         setSelectedVoteId,
         castVote,
+        updateVoteTopic,
+        createVoteTopic,
         triggerConfetti
       }}
     >

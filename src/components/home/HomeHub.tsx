@@ -151,9 +151,13 @@ export const HomeHub: React.FC = () => {
               {hotVote.title}
             </h4>
             <div className="bg-slate-900/60 p-3 rounded-xl border border-slate-800 space-y-2">
-              <div className="flex justify-between text-xs font-bold text-slate-300">
-                <span className="text-cyan-400">찬성 {hotVote.options[0].votes}표</span>
-                <span className="text-rose-400">반대 {hotVote.options[1].votes}표</span>
+              <div className="flex justify-between items-center text-xs font-bold text-slate-300 gap-2">
+                <span className="text-cyan-400 truncate max-w-[48%]" title={hotVote.options[0].name}>
+                  1번: {hotVote.options[0].name.replace(/^선지\s*\d+:\s*/, '')} ({hotVote.options[0].votes}표)
+                </span>
+                <span className="text-rose-400 truncate max-w-[48%] text-right" title={hotVote.options[1].name}>
+                  2번: {hotVote.options[1].name.replace(/^선지\s*\d+:\s*/, '')} ({hotVote.options[1].votes}표)
+                </span>
               </div>
               <div className="w-full h-2 rounded-full bg-slate-800 overflow-hidden flex">
                 <div
