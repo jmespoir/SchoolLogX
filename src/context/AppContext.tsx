@@ -86,6 +86,7 @@ interface AppContextType {
   selectedTimetableCell: TimetableCell | null;
   setSelectedTimetableCell: (cell: TimetableCell | null) => void;
   updateTimetableCell: (id: string, updater: Partial<TimetableCell>) => void;
+  revertTimetableCell: (id: string) => void;
   toggleTimetableQuestCompleted: (id: string) => void;
 
   triggerConfetti: () => void;
@@ -621,10 +622,62 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const updateTimetableCell = (id: string, updater: Partial<TimetableCell>) => {
     setTimetable((prev) =>
-      prev.map((c) => (c.id === id ? { ...c, ...updater } : c))
+      prev.map((c) => {
+        if (c.id === id) {
+          const next = { ...c, ...updater };
+          const orig = next.originalSubject || c.originalSubject || c.subject;
+          if (next.subject !== orig) {
+            next.isChanged = true;
+          } else if (updater.isChanged === undefined && next.subject === orig) {
+            next.isChanged = false;
+          }
+          return next;
+        }
+        return c;
+      })
     );
     if (selectedTimetableCell && selectedTimetableCell.id === id) {
-      setSelectedTimetableCell((prev) => (prev ? { ...prev, ...updater } : null));
+      setSelectedTimetableCell((prev) => {
+        if (!prev) return null;
+        const next = { ...prev, ...updater };
+        const orig = next.originalSubject || prev.originalSubject || prev.subject;
+        if (next.subject !== orig) {
+          next.isChanged = true;
+        } else if (updater.isChanged === undefined && next.subject === orig) {
+          next.isChanged = false;
+        }
+        return next;
+      });
+    }
+    triggerConfetti();
+  };
+
+  const revertTimetableCell = (id: string) => {
+    setTimetable((prev) =>
+      prev.map((c) => {
+        if (c.id === id) {
+          const original = c.originalSubject || c.subject;
+          return {
+            ...c,
+            subject: original,
+            isChanged: false,
+            changeReason: ''
+          };
+        }
+        return c;
+      })
+    );
+    if (selectedTimetableCell && selectedTimetableCell.id === id) {
+      setSelectedTimetableCell((prev) => {
+        if (!prev) return null;
+        const original = prev.originalSubject || prev.subject;
+        return {
+          ...prev,
+          subject: original,
+          isChanged: false,
+          changeReason: ''
+        };
+      });
     }
     triggerConfetti();
   };
@@ -700,6 +753,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         selectedTimetableCell,
         setSelectedTimetableCell,
         updateTimetableCell,
+        revertTimetableCell,
         toggleTimetableQuestCompleted,
         triggerConfetti
       }}

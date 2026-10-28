@@ -121,6 +121,9 @@ export interface TimetableCell {
   dayLabel: string;
   period: number;
   subject: string;
+  originalSubject?: string;
+  isChanged?: boolean;
+  changeReason?: string;
   location?: string;
   items?: string;
   questTitle?: string;

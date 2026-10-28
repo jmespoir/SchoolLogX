@@ -16,7 +16,9 @@ import {
   ChevronDown,
   Check,
   Flame,
-  Award
+  Award,
+  RefreshCw,
+  RotateCcw
 } from 'lucide-react';
 
 const DAYS = [
@@ -29,12 +31,19 @@ const DAYS = [
 
 const PERIODS = [1, 2, 3, 4, 5, 6, 7];
 
+const QUICK_SUBJECTS = [
+  '국어', '수학', '영어', '과학', '사회', '역사',
+  '체육', '미술', '음악', '도덕', '정보', '진로',
+  '자율', '창체', '동아리', '공강(-)'
+];
+
 export const TimetableSection: React.FC = () => {
   const {
     timetable,
     selectedTimetableCell,
     setSelectedTimetableCell,
     updateTimetableCell,
+    revertTimetableCell,
     toggleTimetableQuestCompleted,
     setTab
   } = useApp();
@@ -49,6 +58,7 @@ export const TimetableSection: React.FC = () => {
 
   // Edit fields
   const [editSubject, setEditSubject] = useState('');
+  const [editChangeReason, setEditChangeReason] = useState('');
   const [editLocation, setEditLocation] = useState('');
   const [editItems, setEditItems] = useState('');
   const [editQuestTitle, setEditQuestTitle] = useState('');
@@ -78,6 +88,7 @@ export const TimetableSection: React.FC = () => {
   const handleOpenEdit = () => {
     if (!activeCell) return;
     setEditSubject(activeCell.subject);
+    setEditChangeReason(activeCell.changeReason || '');
     setEditLocation(activeCell.location || '');
     setEditItems(activeCell.items || '');
     setEditQuestTitle(activeCell.questTitle || '');
@@ -91,8 +102,14 @@ export const TimetableSection: React.FC = () => {
     e.preventDefault();
     if (!activeCell) return;
 
+    const newSubject = editSubject.trim() || activeCell.subject;
+    const orig = activeCell.originalSubject || activeCell.subject;
+    const isNowChanged = newSubject !== orig;
+
     updateTimetableCell(activeCell.id, {
-      subject: editSubject.trim() || activeCell.subject,
+      subject: newSubject,
+      isChanged: isNowChanged,
+      changeReason: isNowChanged ? editChangeReason.trim() : '',
       location: editLocation.trim(),
       items: editItems.trim(),
       questTitle: editQuestTitle.trim(),
@@ -101,6 +118,12 @@ export const TimetableSection: React.FC = () => {
       hasPreparation: editHasPreparation
     });
 
+    setIsEditMode(false);
+  };
+
+  const handleRevert = () => {
+    if (!activeCell) return;
+    revertTimetableCell(activeCell.id);
     setIsEditMode(false);
   };
 
@@ -194,6 +217,7 @@ export const TimetableSection: React.FC = () => {
 
                   const isSelected = activeCellId === cell.id;
                   const isAvailable = cell.subject !== '-';
+                  const isChanged = Boolean(cell.isChanged);
 
                   return (
                     <div
@@ -203,7 +227,11 @@ export const TimetableSection: React.FC = () => {
                         !isAvailable
                           ? 'bg-slate-900/30 border-slate-800/40 text-slate-600'
                           : isSelected
-                          ? 'bg-indigo-600/20 border-indigo-400 ring-2 ring-indigo-400/30 shadow-lg shadow-indigo-500/20 scale-[1.02]'
+                          ? isChanged
+                            ? 'bg-gradient-to-br from-purple-900/90 to-indigo-950 border-purple-400 ring-2 ring-purple-300 shadow-xl shadow-purple-500/40 scale-[1.03]'
+                            : 'bg-indigo-600/20 border-indigo-400 ring-2 ring-indigo-400/30 shadow-lg shadow-indigo-500/20 scale-[1.02]'
+                          : isChanged
+                          ? 'bg-gradient-to-br from-[#2a164d] via-[#1f113a] to-[#120a24] border-purple-500/80 text-purple-100 shadow-lg shadow-purple-950/50 ring-1 ring-purple-400/40 hover:border-purple-300 hover:scale-[1.02]'
                           : 'bg-slate-900/80 border-slate-800 hover:border-slate-700 hover:bg-slate-850 hover:-translate-y-0.5'
                       }`}
                     >
@@ -212,6 +240,8 @@ export const TimetableSection: React.FC = () => {
                         className={`text-xs sm:text-sm font-bold tracking-tight ${
                           !isAvailable
                             ? 'text-slate-600'
+                            : isChanged
+                            ? 'text-purple-200 font-black'
                             : isSelected
                             ? 'text-white font-black'
                             : 'text-slate-200'
@@ -219,6 +249,14 @@ export const TimetableSection: React.FC = () => {
                       >
                         {cell.subject}
                       </span>
+
+                      {/* 시간표 변동 배지 */}
+                      {isChanged && (
+                        <div className="mt-1 inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-purple-500/30 border border-purple-400/50 text-[10px] font-black text-purple-200 leading-none">
+                          <RefreshCw className="w-2.5 h-2.5 text-purple-300" />
+                          <span>변동</span>
+                        </div>
+                      )}
 
                       {/* Wireframe Badges: 과제나 준비물이 있을 때만 표시 */}
                       {cell.hasAssignment && Boolean(cell.questTitle) && !cell.isCompleted && (
@@ -264,10 +302,16 @@ export const TimetableSection: React.FC = () => {
                 지참 준비물: {timetable.filter((c) => c.hasPreparation && Boolean(c.items)).length}건
               </span>
             </div>
+            <div className="flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-purple-400" />
+              <span className="font-bold text-purple-300">
+                시간표 변동: {timetable.filter((c) => c.isChanged).length}건
+              </span>
+            </div>
           </div>
 
           <div className="text-slate-500 text-[11px]">
-            * 과목 카드를 클릭하면 상세 교실 위치 및 퀘스트 요강을 확인할 수 있습니다.
+            * 과목 카드를 클릭하면 상세 교실 위치 및 퀘스트 요강, 시간표 변동을 관리할 수 있습니다.
           </div>
         </div>
       </div>
@@ -292,10 +336,11 @@ export const TimetableSection: React.FC = () => {
               <div className="flex items-center gap-2">
                 <button
                   onClick={handleOpenEdit}
-                  className="w-8 h-8 rounded-full bg-white/20 hover:bg-white/30 text-white flex items-center justify-center transition-colors"
-                  title="이 시간표 정보 직접 수정하기"
+                  className="px-2.5 py-1.5 rounded-xl bg-white/20 hover:bg-white/30 text-white flex items-center gap-1.5 text-xs font-bold transition-colors"
+                  title="과목 변경 및 시간표 변동"
                 >
-                  <Edit3 className="w-4 h-4" />
+                  <RefreshCw className="w-3.5 h-3.5" />
+                  <span>시간표 변동 / 수정</span>
                 </button>
                 <button
                   onClick={() => setIsModalOpen(false)}
@@ -319,6 +364,42 @@ export const TimetableSection: React.FC = () => {
                       정규 수업
                     </span>
                   </div>
+
+                  {/* 시간표 변동 안내 배너 */}
+                  {activeCell.isChanged && (
+                    <div className="p-4 rounded-2xl bg-purple-50/90 border border-purple-200 flex items-center justify-between gap-3">
+                      <div className="flex items-center gap-3">
+                        <div className="w-9 h-9 rounded-xl bg-purple-100 border border-purple-300 text-purple-600 flex items-center justify-center text-sm font-bold flex-shrink-0">
+                          🔄
+                        </div>
+                        <div>
+                          <div className="text-xs font-black text-purple-950 flex items-center gap-1.5">
+                            <span>시간표 변동 과목</span>
+                            <span className="text-[10px] px-1.5 py-0.5 rounded bg-purple-200 text-purple-800 font-bold">
+                              변동됨
+                            </span>
+                          </div>
+                          <p className="text-[11px] text-purple-900 mt-0.5">
+                            원래 시간표: <span className="line-through text-slate-500 font-semibold">{activeCell.originalSubject || '-'}</span> → 변경된 과목: <span className="font-bold text-purple-700">{activeCell.subject}</span>
+                          </p>
+                          {activeCell.changeReason && (
+                            <p className="text-[10px] text-slate-500 mt-0.5 italic">
+                              사유: {activeCell.changeReason}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={handleRevert}
+                        className="px-2.5 py-1.5 rounded-xl bg-white hover:bg-purple-100 text-purple-700 font-bold text-xs border border-purple-200 transition-colors shadow-sm flex items-center gap-1 flex-shrink-0"
+                        title="원래 과목으로 되돌리기"
+                      >
+                        <RotateCcw className="w-3 h-3" />
+                        <span>원래대로</span>
+                      </button>
+                    </div>
+                  )}
 
                   {/* 과제/준비물 없음 안내 배너 (표시가 없는 시간 클릭 시 명시) */}
                   {(!activeCell.hasAssignment || !activeCell.questTitle) && (!activeCell.hasPreparation || !activeCell.items) && (
@@ -393,7 +474,7 @@ export const TimetableSection: React.FC = () => {
                     </div>
                   </div>
 
-                  {/* Bottom Action: 퀘스트 완료 체크 토글 또는 과제 등록 버튼 */}
+                  {/* Bottom Action: 퀘스트 완료 체크 토글 또는 과제/변동 등록 버튼 */}
                   {activeCell.hasAssignment && activeCell.questTitle ? (
                     <div className="pt-2">
                       <button
@@ -418,13 +499,13 @@ export const TimetableSection: React.FC = () => {
                       </button>
                     </div>
                   ) : (
-                    <div className="pt-1">
+                    <div className="pt-1 flex gap-2">
                       <button
                         onClick={handleOpenEdit}
-                        className="w-full py-3 px-4 rounded-2xl font-bold text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors flex items-center justify-center gap-2 border border-slate-200"
+                        className="flex-1 py-3 px-4 rounded-2xl font-bold text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors flex items-center justify-center gap-2 border border-slate-200"
                       >
-                        <Edit3 className="w-3.5 h-3.5 text-indigo-500" />
-                        <span>이 수업에 과제 또는 준비물 등록하기</span>
+                        <RefreshCw className="w-3.5 h-3.5 text-purple-600" />
+                        <span>시간표 변동(과목 변경) / 과제 등록</span>
                       </button>
                     </div>
                   )}
@@ -432,15 +513,59 @@ export const TimetableSection: React.FC = () => {
               ) : (
                 /* Edit Form */
                 <form onSubmit={handleSaveEdit} className="space-y-4 text-xs">
+                  {/* 과목명 변경 & 시간표 변동 */}
                   <div>
-                    <label className="block text-xs font-bold text-slate-700 mb-1">
-                      과목명 *
-                    </label>
+                    <div className="flex items-center justify-between mb-1">
+                      <label className="text-xs font-bold text-slate-700">
+                        과목명 (시간표 변동) *
+                      </label>
+                      <span className="text-[11px] text-slate-500">
+                        기존 과목: <strong className="text-indigo-600">{activeCell.originalSubject || activeCell.subject}</strong>
+                      </span>
+                    </div>
                     <input
                       type="text"
                       required
                       value={editSubject}
                       onChange={(e) => setEditSubject(e.target.value)}
+                      placeholder="과목명을 입력하거나 아래에서 선택하세요"
+                      className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-900 focus:outline-none focus:border-indigo-600"
+                    />
+
+                    {/* 빠른 과목 선택 버튼들 */}
+                    <div className="mt-2 space-y-1.5">
+                      <span className="text-[11px] font-semibold text-slate-500">
+                        빠른 과목 선택:
+                      </span>
+                      <div className="flex flex-wrap gap-1.5">
+                        {QUICK_SUBJECTS.map((sub) => (
+                          <button
+                            key={sub}
+                            type="button"
+                            onClick={() => setEditSubject(sub)}
+                            className={`px-2 py-1 rounded-lg text-[11px] font-bold border transition-all ${
+                              editSubject === sub
+                                ? 'bg-purple-600 text-white border-purple-600 shadow-sm'
+                                : 'bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-300'
+                            }`}
+                          >
+                            {sub}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* 변동 사유 입력 */}
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1">
+                      시간표 변동 사유 (선택 입력)
+                    </label>
+                    <input
+                      type="text"
+                      value={editChangeReason}
+                      onChange={(e) => setEditChangeReason(e.target.value)}
+                      placeholder="예: 선생님 출장으로 체육 수업 교체, 특별 자치 활동"
                       className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-900 focus:outline-none focus:border-indigo-600"
                     />
                   </div>
@@ -523,10 +648,21 @@ export const TimetableSection: React.FC = () => {
                     <button
                       type="button"
                       onClick={() => setIsEditMode(false)}
-                      className="flex-1 py-2.5 px-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs"
+                      className="py-2.5 px-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs"
                     >
                       취소
                     </button>
+                    {(activeCell.isChanged || editSubject !== activeCell.originalSubject) && (
+                      <button
+                        type="button"
+                        onClick={handleRevert}
+                        className="py-2.5 px-3 rounded-xl bg-purple-50 hover:bg-purple-100 text-purple-700 font-bold text-xs border border-purple-200 flex items-center justify-center gap-1 transition-colors"
+                        title="원래 시간표 과목으로 되돌리기"
+                      >
+                        <RotateCcw className="w-3 h-3" />
+                        <span>원래대로</span>
+                      </button>
+                    )}
                     <button
                       type="submit"
                       className="flex-1 py-2.5 px-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs shadow-md shadow-indigo-600/30"
