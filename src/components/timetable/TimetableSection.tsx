@@ -45,6 +45,7 @@ export const TimetableSection: React.FC = () => {
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   // Edit fields
   const [editSubject, setEditSubject] = useState('');
@@ -63,6 +64,15 @@ export const TimetableSection: React.FC = () => {
     setSelectedTimetableCell(cell);
     setIsModalOpen(true);
     setIsEditMode(false);
+
+    // 과제나 준비물 표시가 없는 시간을 클릭했을 때 알림 토스트 표시
+    const hasAnyTask = (cell.hasAssignment && Boolean(cell.questTitle)) || (cell.hasPreparation && Boolean(cell.items));
+    if (!hasAnyTask) {
+      setToastMessage(`[${cell.subject}] 등록된 과제가 없습니다.`);
+      setTimeout(() => setToastMessage(null), 3500);
+    } else {
+      setToastMessage(null);
+    }
   };
 
   const handleOpenEdit = () => {
@@ -95,7 +105,15 @@ export const TimetableSection: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6 py-4 max-w-5xl mx-auto">
+    <div className="space-y-6 py-4 max-w-5xl mx-auto relative">
+      {/* Toast Notice for No Assignment Cell */}
+      {toastMessage && (
+        <div className="fixed top-20 left-1/2 -translate-x-1/2 z-50 bg-[#0d1326] border border-cyan-500/60 text-white px-5 py-3 rounded-2xl shadow-2xl flex items-center gap-3 text-xs font-bold animate-in fade-in slide-in-from-top-4 duration-200 backdrop-blur-md">
+          <span className="w-2 h-2 rounded-full bg-cyan-400 animate-ping" />
+          <span className="text-cyan-300">💡 {toastMessage}</span>
+        </div>
+      )}
+
       {/* Back to Home Button */}
       <div className="flex items-center justify-between">
         <button
@@ -202,15 +220,15 @@ export const TimetableSection: React.FC = () => {
                         {cell.subject}
                       </span>
 
-                      {/* Wireframe Badges */}
-                      {cell.hasAssignment && (
+                      {/* Wireframe Badges: 과제나 준비물이 있을 때만 표시 */}
+                      {cell.hasAssignment && Boolean(cell.questTitle) && !cell.isCompleted && (
                         <div className="mt-1 inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-rose-500/10 border border-rose-500/30 text-[10px] font-bold text-rose-400 leading-none">
                           <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse" />
                           <span>과제 있음</span>
                         </div>
                       )}
 
-                      {cell.hasPreparation && (
+                      {cell.hasPreparation && Boolean(cell.items) && (
                         <div className="mt-1 inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/30 text-[10px] font-bold text-amber-400 leading-none">
                           <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
                           <span>준비물</span>
@@ -237,13 +255,13 @@ export const TimetableSection: React.FC = () => {
             <div className="flex items-center gap-1.5">
               <span className="w-2 h-2 rounded-full bg-rose-500" />
               <span className="font-semibold text-slate-300">
-                미완료 과제: {timetable.filter((c) => c.hasAssignment && !c.isCompleted).length}건
+                미완료 과제: {timetable.filter((c) => c.hasAssignment && Boolean(c.questTitle) && !c.isCompleted).length}건
               </span>
             </div>
             <div className="flex items-center gap-1.5">
               <span className="w-2 h-2 rounded-full bg-amber-500" />
               <span className="font-semibold text-slate-300">
-                지참 준비물: {timetable.filter((c) => c.hasPreparation).length}건
+                지참 준비물: {timetable.filter((c) => c.hasPreparation && Boolean(c.items)).length}건
               </span>
             </div>
           </div>
@@ -302,6 +320,26 @@ export const TimetableSection: React.FC = () => {
                     </span>
                   </div>
 
+                  {/* 과제/준비물 없음 안내 배너 (표시가 없는 시간 클릭 시 명시) */}
+                  {(!activeCell.hasAssignment || !activeCell.questTitle) && (!activeCell.hasPreparation || !activeCell.items) && (
+                    <div className="p-4 rounded-2xl bg-emerald-50/90 border border-emerald-200 flex items-center gap-3.5">
+                      <div className="w-10 h-10 rounded-xl bg-emerald-100 border border-emerald-300 text-emerald-600 flex items-center justify-center text-lg flex-shrink-0">
+                        ✨
+                      </div>
+                      <div className="flex-1">
+                        <div className="text-xs font-black text-emerald-950 flex items-center gap-1.5">
+                          <span>과제가 없습니다</span>
+                          <span className="text-[10px] px-1.5 py-0.5 rounded bg-emerald-200/70 text-emerald-800 font-bold">
+                            과제 없음
+                          </span>
+                        </div>
+                        <p className="text-[11px] text-emerald-800/90 mt-0.5 leading-relaxed">
+                          현재 등록된 과제 및 특별 준비물이 없는 여유로운 수업 시간입니다.
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
                   {/* Section 1: 장소 및 장착 아이템(준비물) (와이어프레임 Page 3) */}
                   <div className="space-y-2">
                     <div className="flex items-center gap-1.5 text-xs font-bold text-slate-600">
@@ -314,7 +352,9 @@ export const TimetableSection: React.FC = () => {
                         {activeCell.location || '교실 미지정'}
                       </div>
                       <div className="text-xs font-medium text-slate-500 leading-relaxed">
-                        {activeCell.items || '별도 준비물 없음 (교과서 및 필기구 지참)'}
+                        {activeCell.hasPreparation && activeCell.items
+                          ? activeCell.items
+                          : '별도 준비물 없음 (교과서 및 필기구 지참)'}
                       </div>
                     </div>
                   </div>
@@ -328,15 +368,24 @@ export const TimetableSection: React.FC = () => {
 
                     <div
                       className={`p-4 rounded-2xl border transition-all space-y-2 ${
-                        activeCell.hasAssignment || activeCell.questTitle
+                        activeCell.hasAssignment && activeCell.questTitle
                           ? 'bg-rose-50/50 border-rose-200 text-rose-950'
                           : 'bg-slate-50 border-slate-200 text-slate-600'
                       }`}
                     >
-                      <div className="text-sm font-bold text-slate-900">
-                        {activeCell.questTitle || '등록된 과제가 없습니다. 편안한 수업 되세요!'}
+                      <div className="flex items-center justify-between">
+                        <div className="text-sm font-bold text-slate-900">
+                          {activeCell.hasAssignment && activeCell.questTitle
+                            ? activeCell.questTitle
+                            : '등록된 과제가 없습니다.'}
+                        </div>
+                        {(!activeCell.hasAssignment || !activeCell.questTitle) && (
+                          <span className="text-[10px] font-bold text-slate-500 bg-slate-200/80 px-2 py-0.5 rounded">
+                            과제 없음
+                          </span>
+                        )}
                       </div>
-                      {activeCell.questDeadline && (
+                      {activeCell.hasAssignment && activeCell.questDeadline && (
                         <div className="text-xs font-medium text-rose-600">
                           기한: {activeCell.questDeadline}
                         </div>
@@ -344,8 +393,8 @@ export const TimetableSection: React.FC = () => {
                     </div>
                   </div>
 
-                  {/* Bottom Action: 퀘스트 완료 체크 토글 */}
-                  {activeCell.questTitle && (
+                  {/* Bottom Action: 퀘스트 완료 체크 토글 또는 과제 등록 버튼 */}
+                  {activeCell.hasAssignment && activeCell.questTitle ? (
                     <div className="pt-2">
                       <button
                         onClick={() => toggleTimetableQuestCompleted(activeCell.id)}
@@ -366,6 +415,16 @@ export const TimetableSection: React.FC = () => {
                             <span>과제 수행 완료 체크하기</span>
                           </>
                         )}
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="pt-1">
+                      <button
+                        onClick={handleOpenEdit}
+                        className="w-full py-3 px-4 rounded-2xl font-bold text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors flex items-center justify-center gap-2 border border-slate-200"
+                      >
+                        <Edit3 className="w-3.5 h-3.5 text-indigo-500" />
+                        <span>이 수업에 과제 또는 준비물 등록하기</span>
                       </button>
                     </div>
                   )}

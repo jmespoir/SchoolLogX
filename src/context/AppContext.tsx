@@ -155,7 +155,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   // Timetable (스마트 시간표)
   const [timetable, setTimetable] = useState<TimetableCell[]>(() => {
-    const saved = localStorage.getItem('slx_timetable');
+    const saved = localStorage.getItem('slx_timetable_v3');
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
@@ -194,7 +194,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   }, [votes]);
 
   useEffect(() => {
-    localStorage.setItem('slx_timetable', JSON.stringify(timetable));
+    localStorage.setItem('slx_timetable_v3', JSON.stringify(timetable));
   }, [timetable]);
 
   // Initial Sync from Supabase Backend
