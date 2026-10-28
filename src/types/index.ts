@@ -1,4 +1,4 @@
-export type MainTab = 'home' | 'hobby' | 'quest' | 'profile' | 'petition' | 'vote';
+export type MainTab = 'home' | 'hobby' | 'quest' | 'profile' | 'petition' | 'vote' | 'timetable';
 
 export interface UserProfile {
   id: string;
@@ -113,4 +113,19 @@ export interface VoteTopic {
   remainingTime: string;
   options: [VoteCandidate, VoteCandidate]; // 찬반 2선지
   userVotedOptionId?: string;
+}
+
+export interface TimetableCell {
+  id: string;
+  day: 'mon' | 'tue' | 'wed' | 'thu' | 'fri';
+  dayLabel: string;
+  period: number;
+  subject: string;
+  location?: string;
+  items?: string;
+  questTitle?: string;
+  questDeadline?: string;
+  hasAssignment?: boolean;
+  hasPreparation?: boolean;
+  isCompleted?: boolean;
 }

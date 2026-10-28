@@ -7,6 +7,7 @@ import { QuestSection } from './components/quest/QuestSection';
 import { ProfileCard } from './components/profile/ProfileCard';
 import { PetitionSection } from './components/petition/PetitionSection';
 import { VoteArena } from './components/vote/VoteArena';
+import { TimetableSection } from './components/timetable/TimetableSection';
 import { InteractiveCursor } from './components/effects/InteractiveCursor';
 
 const MainContent: React.FC = () => {
@@ -20,6 +21,7 @@ const MainContent: React.FC = () => {
       {tab === 'profile' && <ProfileCard />}
       {tab === 'petition' && <PetitionSection />}
       {tab === 'vote' && <VoteArena />}
+      {tab === 'timetable' && <TimetableSection />}
     </main>
   );
 };

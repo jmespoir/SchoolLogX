@@ -6,7 +6,8 @@ import type {
   HobbyPost,
   QuestParty,
   PetitionItem,
-  VoteTopic
+  VoteTopic,
+  TimetableCell
 } from '../types';
 import {
   INITIAL_USER,
@@ -14,7 +15,8 @@ import {
   INITIAL_QUEST,
   INITIAL_QUESTS,
   INITIAL_PETITIONS,
-  INITIAL_VOTES
+  INITIAL_VOTES,
+  INITIAL_TIMETABLE
 } from '../data/mockData';
 import { SupabaseService } from '../services/supabaseService';
 import { supabase } from '../lib/supabase';
@@ -78,6 +80,13 @@ interface AppContextType {
   castVote: (topicId: string, optionId: string) => boolean;
   updateVoteTopic: (topicId: string, title: string, opt1Name: string, opt2Name: string) => void;
   createVoteTopic: (title: string, opt1Name: string, opt2Name: string, remainingTime?: string) => void;
+
+  // Timetable (스마트 시간표)
+  timetable: TimetableCell[];
+  selectedTimetableCell: TimetableCell | null;
+  setSelectedTimetableCell: (cell: TimetableCell | null) => void;
+  updateTimetableCell: (id: string, updater: Partial<TimetableCell>) => void;
+  toggleTimetableQuestCompleted: (id: string) => void;
 
   triggerConfetti: () => void;
 }
@@ -144,6 +153,21 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   });
   const [selectedVoteId, setSelectedVoteId] = useState<string>('vote-01');
 
+  // Timetable (스마트 시간표)
+  const [timetable, setTimetable] = useState<TimetableCell[]>(() => {
+    const saved = localStorage.getItem('slx_timetable');
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      } catch {
+        // fallback
+      }
+    }
+    return INITIAL_TIMETABLE;
+  });
+  const [selectedTimetableCell, setSelectedTimetableCell] = useState<TimetableCell | null>(null);
+
   // Persistence to LocalStorage (as cache and fallback)
   useEffect(() => {
     localStorage.setItem('slx_user', JSON.stringify(user));
@@ -168,6 +192,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   useEffect(() => {
     localStorage.setItem('slx_votes', JSON.stringify(votes));
   }, [votes]);
+
+  useEffect(() => {
+    localStorage.setItem('slx_timetable', JSON.stringify(timetable));
+  }, [timetable]);
 
   // Initial Sync from Supabase Backend
   const refreshFromBackend = async () => {
@@ -591,6 +619,34 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   };
 
+  const updateTimetableCell = (id: string, updater: Partial<TimetableCell>) => {
+    setTimetable((prev) =>
+      prev.map((c) => (c.id === id ? { ...c, ...updater } : c))
+    );
+    if (selectedTimetableCell && selectedTimetableCell.id === id) {
+      setSelectedTimetableCell((prev) => (prev ? { ...prev, ...updater } : null));
+    }
+    triggerConfetti();
+  };
+
+  const toggleTimetableQuestCompleted = (id: string) => {
+    setTimetable((prev) =>
+      prev.map((c) => {
+        if (c.id === id) {
+          const next = !c.isCompleted;
+          if (next) triggerConfetti();
+          return { ...c, isCompleted: next };
+        }
+        return c;
+      })
+    );
+    if (selectedTimetableCell && selectedTimetableCell.id === id) {
+      setSelectedTimetableCell((prev) =>
+        prev ? { ...prev, isCompleted: !prev.isCompleted } : null
+      );
+    }
+  };
+
   const selectedPetition =
     petitions.find((p) => p.id === selectedPetitionId) || petitions[0];
 
@@ -640,6 +696,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         castVote,
         updateVoteTopic,
         createVoteTopic,
+        timetable,
+        selectedTimetableCell,
+        setSelectedTimetableCell,
+        updateTimetableCell,
+        toggleTimetableQuestCompleted,
         triggerConfetti
       }}
     >

@@ -5,7 +5,8 @@ import type {
   QuestParty,
   PetitionCategory,
   PetitionItem,
-  VoteTopic
+  VoteTopic,
+  TimetableCell
 } from '../types';
 
 export const INITIAL_USER: UserProfile = {
@@ -372,3 +373,459 @@ export const INITIAL_VOTES: VoteTopic[] = [
     ]
   }
 ];
+
+export const INITIAL_TIMETABLE: TimetableCell[] = [
+  // 1교시
+  {
+    id: 'mon-1',
+    day: 'mon',
+    dayLabel: '월요일',
+    period: 1,
+    subject: '국어',
+    location: '본관 2층 1반 교실',
+    items: '국어 교과서, 필기도구',
+    questTitle: '시 3편 낭독 및 감상평 작성',
+    questDeadline: '다음 수업 시간 전까지 제출',
+    hasAssignment: false,
+    hasPreparation: false
+  },
+  {
+    id: 'tue-1',
+    day: 'tue',
+    dayLabel: '화요일',
+    period: 1,
+    subject: '수학',
+    location: '본관 3층 수학 전용 교실',
+    items: '수학 교과서, 삼각자 세트, 검은색 볼펜',
+    questTitle: '교과서 45p ~ 48p 연습문제 풀이',
+    questDeadline: '다음 수업 시간 전까지 제출',
+    hasAssignment: true,
+    hasPreparation: false
+  },
+  {
+    id: 'wed-1',
+    day: 'wed',
+    dayLabel: '수요일',
+    period: 1,
+    subject: '영어',
+    location: '어학 실습실 A',
+    items: '영어 단어장, 무선 이어폰',
+    questTitle: 'Lesson 4 핵심 어휘 30개 암기',
+    questDeadline: '수업 시작 직후 단어 테스트',
+    hasAssignment: false,
+    hasPreparation: false
+  },
+  {
+    id: 'thu-1',
+    day: 'thu',
+    dayLabel: '목요일',
+    period: 1,
+    subject: '과학',
+    location: '과학 1실 (화학실험실)',
+    items: '실험 가운, 보안경, 실험노트',
+    questTitle: '화학 반응 실험 사전 보고서 작성',
+    questDeadline: '실험 시작 전 교탁 제출',
+    hasAssignment: false,
+    hasPreparation: false
+  },
+  {
+    id: 'fri-1',
+    day: 'fri',
+    dayLabel: '금요일',
+    period: 1,
+    subject: '체육',
+    location: '체육관 1층 농구장',
+    items: '체육복, 실내 운동화, 개인 물병',
+    questTitle: '자유투 10회 연속 성공 기록지 작성',
+    questDeadline: '수업 종료 전 제출',
+    hasAssignment: false,
+    hasPreparation: false
+  },
+
+  // 2교시
+  {
+    id: 'mon-2',
+    day: 'mon',
+    dayLabel: '월요일',
+    period: 2,
+    subject: '영어',
+    location: '어학 실습실 B',
+    items: '영어 교과서, 리딩 워크북',
+    questTitle: '본문 1과 핵심 문장 5개 영작',
+    questDeadline: '다음 영어 시간 전까지',
+    hasAssignment: false,
+    hasPreparation: false
+  },
+  {
+    id: 'tue-2',
+    day: 'tue',
+    dayLabel: '화요일',
+    period: 2,
+    subject: '미술',
+    location: '창작관 3층 미술실',
+    items: '수채화 물감, 4절 스케치북, 붓 세트',
+    questTitle: '원근법을 적용한 풍경화 밑그림 완성',
+    questDeadline: '2주 후 실기 평가',
+    hasAssignment: false,
+    hasPreparation: false
+  },
+  {
+    id: 'wed-2',
+    day: 'wed',
+    dayLabel: '수요일',
+    period: 2,
+    subject: '국어',
+    location: '본관 2층 1반 교실',
+    items: '국어 교과서, 유인물 바인더',
+    questTitle: '현대 소설 등장인물 성격 분석표',
+    questDeadline: '금요일까지 제출',
+    hasAssignment: false,
+    hasPreparation: false
+  },
+  {
+    id: 'thu-2',
+    day: 'thu',
+    dayLabel: '목요일',
+    period: 2,
+    subject: '사회',
+    location: '사회 전용 교실',
+    items: '사회과 부도, 지도책, 색연필',
+    questTitle: '지역별 산업 특색 인포그래픽 작성',
+    questDeadline: '다음 수업 전까지',
+    hasAssignment: false,
+    hasPreparation: false
+  },
+  {
+    id: 'fri-2',
+    day: 'fri',
+    dayLabel: '금요일',
+    period: 2,
+    subject: '음악',
+    location: '음악관 2층 합주실',
+    items: '리코더, 악보 파일',
+    questTitle: '지정곡 리코더 2중주 멜로디 연습',
+    questDeadline: '다음 주 합주 실기',
+    hasAssignment: false,
+    hasPreparation: false
+  },
+
+  // 3교시
+  {
+    id: 'mon-3',
+    day: 'mon',
+    dayLabel: '월요일',
+    period: 3,
+    subject: '수학',
+    location: '본관 2층 1반 교실',
+    items: '수학 익힘책, 오답노트',
+    questTitle: '수열 단원 고난도 3문제 오답 정리',
+    questDeadline: '화요일 수학 수업 전',
+    hasAssignment: false,
+    hasPreparation: false
+  },
+  {
+    id: 'tue-3',
+    day: 'tue',
+    dayLabel: '화요일',
+    period: 3,
+    subject: '미술',
+    location: '창작관 3층 미술실',
+    items: '조소용 점토, 조각칼 세트',
+    questTitle: '캐릭터 두상 입체 조형물 완성',
+    questDeadline: '당일 수업 시간 내 완성',
+    hasAssignment: false,
+    hasPreparation: false
+  },
+  {
+    id: 'wed-3',
+    day: 'wed',
+    dayLabel: '수요일',
+    period: 3,
+    subject: '역사',
+    location: '본관 2층 1반 교실',
+    items: '한국사 교과서, 역사 연표 노트',
+    questTitle: '조선 전기 왕대별 업적 마인드맵',
+    questDeadline: '목요일 수업 전까지',
+    hasAssignment: false,
+    hasPreparation: false
+  },
+  {
+    id: 'thu-3',
+    day: 'thu',
+    dayLabel: '목요일',
+    period: 3,
+    subject: '영어',
+    location: '어학 실습실 A',
+    items: '영어 교과서, 에세이 노트',
+    questTitle: '나의 미래 진로 영작 에세이 초안',
+    questDeadline: '다음 주 월요일 제출',
+    hasAssignment: false,
+    hasPreparation: false
+  },
+  {
+    id: 'fri-3',
+    day: 'fri',
+    dayLabel: '금요일',
+    period: 3,
+    subject: '국어',
+    location: '본관 2층 1반 교실',
+    items: '수능형 독해 학습지',
+    questTitle: '비문학 과학/기술 제재 2지문 분석',
+    questDeadline: '월요일 수업 시작 전',
+    hasAssignment: false,
+    hasPreparation: false
+  },
+
+  // 4교시
+  {
+    id: 'mon-4',
+    day: 'mon',
+    dayLabel: '월요일',
+    period: 4,
+    subject: '과학',
+    location: '과학 2실 (물리실험실)',
+    items: '물리 교과서, 계산기',
+    questTitle: '역학적 에너지 보존 법칙 데이터 분석',
+    questDeadline: '목요일 과학 시간 전',
+    hasAssignment: false,
+    hasPreparation: false
+  },
+  {
+    id: 'tue-4',
+    day: 'tue',
+    dayLabel: '화요일',
+    period: 4,
+    subject: '체육',
+    location: '대운동장 축구장',
+    items: '축구화(또는 운동화), 정강이 보호대',
+    questTitle: '2:1 원투 패스 및 슛팅 기본기 연습',
+    questDeadline: '실기 수업 참여',
+    hasAssignment: false,
+    hasPreparation: false
+  },
+  {
+    id: 'wed-4',
+    day: 'wed',
+    dayLabel: '수요일',
+    period: 4,
+    subject: '도덕',
+    location: '본관 2층 1반 교실',
+    items: '도덕 교과서, 토론 활동지',
+    questTitle: '인공지능 윤리 가이드라인 토론 입론서',
+    questDeadline: '다음 도덕 수업 전까지',
+    hasAssignment: false,
+    hasPreparation: false
+  },
+  {
+    id: 'thu-4',
+    day: 'thu',
+    dayLabel: '목요일',
+    period: 4,
+    subject: '수학',
+    location: '본관 3층 수학 전용 교실',
+    items: '수학 교과서, 방안지(모눈종이)',
+    questTitle: '이차함수의 최대/최소 그래프 작도',
+    questDeadline: '금요일 아침 제출',
+    hasAssignment: false,
+    hasPreparation: false
+  },
+  {
+    id: 'fri-4',
+    day: 'fri',
+    dayLabel: '금요일',
+    period: 4,
+    subject: '영어',
+    location: '어학 실습실 A',
+    items: '영어 교재, 발표 대본, 단어 암기장',
+    questTitle: '1분 영어 스피치 대본 준비 및 필수 구문 암기',
+    questDeadline: '수업 시작 직후 구두 발표',
+    hasAssignment: false,
+    hasPreparation: true
+  },
+
+  // 5교시
+  {
+    id: 'mon-5',
+    day: 'mon',
+    dayLabel: '월요일',
+    period: 5,
+    subject: '역사',
+    location: '본관 2층 1반 교실',
+    items: '역사 교과서, 필기도구',
+    questTitle: '삼국 통일 과정 주요 전투 일지',
+    questDeadline: '수요일 수업 전',
+    hasAssignment: false,
+    hasPreparation: false
+  },
+  {
+    id: 'tue-5',
+    day: 'tue',
+    dayLabel: '화요일',
+    period: 5,
+    subject: '국어',
+    location: '본관 2층 1반 교실',
+    items: '고전문학 유인물',
+    questTitle: '가시리, 청산별곡 시어 풀이 정리',
+    questDeadline: '금요일 국어 시간 전',
+    hasAssignment: false,
+    hasPreparation: false
+  },
+  {
+    id: 'wed-5',
+    day: 'wed',
+    dayLabel: '수요일',
+    period: 5,
+    subject: '정보',
+    location: '모션랩 2층 코딩실',
+    items: '개인 USB, 코딩 실습 노트',
+    questTitle: '파이썬 조건문과 반복문 미니 프로젝트',
+    questDeadline: '온라인 실습 서버에 코드 제출',
+    hasAssignment: false,
+    hasPreparation: false
+  },
+  {
+    id: 'thu-5',
+    day: 'thu',
+    dayLabel: '목요일',
+    period: 5,
+    subject: '체육',
+    location: '체육관 2층 배드민턴장',
+    items: '배드민턴 라켓, 셔틀콕 2개',
+    questTitle: '하이클리어 및 드롭샷 랠리 20회',
+    questDeadline: '실기 점검',
+    hasAssignment: false,
+    hasPreparation: false
+  },
+  {
+    id: 'fri-5',
+    day: 'fri',
+    dayLabel: '금요일',
+    period: 5,
+    subject: '창체',
+    location: '본관 2층 1반 교실',
+    items: '자율활동 기록장',
+    questTitle: '월간 학급 자치 회의 안건 제안서',
+    questDeadline: '학급 회의 시 발표',
+    hasAssignment: false,
+    hasPreparation: false
+  },
+
+  // 6교시
+  {
+    id: 'mon-6',
+    day: 'mon',
+    dayLabel: '월요일',
+    period: 6,
+    subject: '창체',
+    location: '시청각실',
+    items: '동아리 활동 일지',
+    questTitle: '교내 청소년 포럼 참관 소감문',
+    questDeadline: '화요일 조례 시간 제출',
+    hasAssignment: false,
+    hasPreparation: false
+  },
+  {
+    id: 'tue-6',
+    day: 'tue',
+    dayLabel: '화요일',
+    period: 6,
+    subject: '수학',
+    location: '본관 3층 수학 전용 교실',
+    items: '수학 연습장, 샤프/지우개',
+    questTitle: '주간 단원평가 20문항 풀이',
+    questDeadline: '수업 종료 시 채점',
+    hasAssignment: false,
+    hasPreparation: false
+  },
+  {
+    id: 'wed-6',
+    day: 'wed',
+    dayLabel: '수요일',
+    period: 6,
+    subject: '과학',
+    location: '과학 3실 (생물실험실)',
+    items: '현미경 관찰 보고서 양식',
+    questTitle: '양파 표피세포 관찰 스케치 제출',
+    questDeadline: '당일 수업 시간 내 제출',
+    hasAssignment: false,
+    hasPreparation: false
+  },
+  {
+    id: 'thu-6',
+    day: 'thu',
+    dayLabel: '목요일',
+    period: 6,
+    subject: '자율',
+    location: '본관 2층 1반 교실',
+    items: '자율학습 교재, 추천 도서 1권',
+    questTitle: '주간 학습 플래너 작성 및 독서 30쪽',
+    questDeadline: '담임선생님 확인 도장',
+    hasAssignment: false,
+    hasPreparation: false
+  },
+  {
+    id: 'fri-6',
+    day: 'fri',
+    dayLabel: '금요일',
+    period: 6,
+    subject: '진로',
+    location: '진로상담실',
+    items: '커리어 포트폴리오 파일',
+    questTitle: '관심 대학 및 희망 학과 탐색 보고서',
+    questDeadline: '다음 주 진로 시간 전',
+    hasAssignment: false,
+    hasPreparation: false
+  },
+
+  // 7교시
+  {
+    id: 'mon-7',
+    day: 'mon',
+    dayLabel: '월요일',
+    period: 7,
+    subject: '-',
+    hasAssignment: false,
+    hasPreparation: false
+  },
+  {
+    id: 'tue-7',
+    day: 'tue',
+    dayLabel: '화요일',
+    period: 7,
+    subject: '-',
+    hasAssignment: false,
+    hasPreparation: false
+  },
+  {
+    id: 'wed-7',
+    day: 'wed',
+    dayLabel: '수요일',
+    period: 7,
+    subject: '동아리',
+    location: '각 동아리 지정 특별실',
+    items: '동아리별 준비물, 소모임 프로젝트 파일',
+    questTitle: '가을 축제 부스 운영 기획안 작성 (소모임 연계)',
+    questDeadline: '동아리 부장에게 제출',
+    hasAssignment: false,
+    hasPreparation: false
+  },
+  {
+    id: 'thu-7',
+    day: 'thu',
+    dayLabel: '목요일',
+    period: 7,
+    subject: '-',
+    hasAssignment: false,
+    hasPreparation: false
+  },
+  {
+    id: 'fri-7',
+    day: 'fri',
+    dayLabel: '금요일',
+    period: 7,
+    subject: '-',
+    hasAssignment: false,
+    hasPreparation: false
+  }
+];
+

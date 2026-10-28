@@ -9,7 +9,8 @@ import {
   ArrowRight,
   Flame,
   Clock,
-  ShieldCheck
+  ShieldCheck,
+  Calendar
 } from 'lucide-react';
 
 export const HomeHub: React.FC = () => {
@@ -28,13 +29,41 @@ export const HomeHub: React.FC = () => {
           School Log <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 via-cyan-400 to-purple-400">X</span>
         </h1>
         <p className="text-slate-400 text-base md:text-lg max-w-2xl mx-auto">
-          작품 전시부터 퀘스트형 소모임 모집, 스마트 신문고와 실시간 자치 투표까지.
+          작품 전시부터 퀘스트형 소모임 모집, 스마트 신문고와 실시간 자치 투표, 스마트 시간표까지.
           학생들의 즐거운 학교 생활을 위한 인터랙티브 허브입니다.
         </p>
       </div>
 
-      {/* 4 Main Core Action Cards (Wireframe P.1 Cards) */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+      {/* 5 Main Core Action Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
+        {/* 0. 스마트 시간표 */}
+        <div
+          onClick={() => setTab('timetable')}
+          className="group relative bg-[#13182b] hover:bg-[#181f38] border border-slate-800/80 hover:border-indigo-500/50 rounded-2xl p-5 cursor-pointer transition-all duration-200 hover:-translate-y-1 hover:shadow-xl hover:shadow-indigo-500/10 flex flex-col justify-between"
+        >
+          <div className="space-y-3">
+            <div className="w-12 h-12 rounded-xl bg-indigo-500/20 border border-indigo-500/40 text-indigo-400 flex items-center justify-center group-hover:scale-110 transition-transform">
+              <Calendar className="w-6 h-6" />
+            </div>
+            <div>
+              <div className="flex items-center gap-1.5">
+                <h3 className="text-lg font-bold text-white group-hover:text-cyan-300 transition-colors">
+                  스마트 시간표
+                </h3>
+                <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
+                  NEW
+                </span>
+              </div>
+              <p className="text-xs text-slate-400 mt-1">
+                일정 & 과제 퀘스트 연동
+              </p>
+            </div>
+          </div>
+          <div className="pt-4 flex items-center justify-between text-xs font-semibold text-slate-500 group-hover:text-indigo-400 transition-colors">
+            <span>주간 시간표 보기</span>
+            <ArrowRight className="w-4 h-4 transform group-hover:translate-x-1 transition-transform" />
+          </div>
+        </div>
         {/* 1. 카테고리 취미 전시관 */}
         <div
           onClick={() => setTab('hobby')}

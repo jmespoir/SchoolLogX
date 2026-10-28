@@ -7,7 +7,8 @@ import {
   Users,
   ShieldAlert,
   Vote,
-  UserCheck
+  UserCheck,
+  Calendar
 } from 'lucide-react';
 import { SupabaseStatusBadge } from '../common/SupabaseStatusBadge';
 
@@ -16,6 +17,8 @@ export const Navbar: React.FC = () => {
 
   const getTabTitle = () => {
     switch (tab) {
+      case 'timetable':
+        return { label: '스마트 시간표', icon: <Calendar className="w-3.5 h-3.5 text-indigo-400" /> };
       case 'hobby':
         return { label: '취미 전시관', icon: <Gamepad2 className="w-3.5 h-3.5 text-pink-400" /> };
       case 'quest':
