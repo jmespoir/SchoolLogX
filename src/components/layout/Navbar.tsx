@@ -95,14 +95,37 @@ export const Navbar: React.FC = () => {
         <div className="flex items-center gap-2.5">
           <SupabaseStatusBadge />
 
-          {/* User Info Badge */}
-          <div className="flex items-center gap-2.5 px-3 py-1.5 rounded-xl bg-slate-800/40 border border-slate-800 text-left select-none">
-            <div className="w-7 h-7 rounded-lg bg-indigo-500/20 border border-indigo-500/40 flex items-center justify-center text-sm">
+          {/* User Info Badge (클릭 시 프로필 화면으로 이동) */}
+          <div
+            onClick={() => setTab('profile')}
+            role="button"
+            tabIndex={0}
+            title="개인 프로필 보기"
+            className={`flex items-center gap-2.5 px-3 py-1.5 rounded-xl border text-left select-none cursor-pointer transition-all duration-200 hover:scale-105 ${
+              tab === 'profile'
+                ? 'bg-emerald-500/15 border-emerald-500/50 shadow-md shadow-emerald-500/10 ring-1 ring-emerald-500/30'
+                : 'bg-slate-800/40 hover:bg-slate-800/80 border-slate-800 hover:border-slate-700'
+            }`}
+          >
+            <div
+              className={`w-7 h-7 rounded-lg flex items-center justify-center text-sm transition-colors ${
+                tab === 'profile'
+                  ? 'bg-emerald-500/20 border border-emerald-500/50'
+                  : 'bg-indigo-500/20 border border-indigo-500/40'
+              }`}
+            >
               {user.avatarIcon}
             </div>
             <div className="hidden sm:block">
-              <div className="text-xs font-bold text-slate-200 leading-tight">
-                {user.gamerTag}
+              <div className="flex items-center gap-1.5">
+                <span
+                  className={`text-xs font-bold leading-tight ${
+                    tab === 'profile' ? 'text-emerald-300' : 'text-slate-200'
+                  }`}
+                >
+                  {user.gamerTag}
+                </span>
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
               </div>
               <div className="text-[10px] text-slate-400 leading-tight">
                 Lv.12 학생 자치원

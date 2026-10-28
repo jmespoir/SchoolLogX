@@ -3,7 +3,6 @@ import { useApp } from '../../context/AppContext';
 import {
   Rocket,
   Users2,
-  Contact2,
   Vote,
   Sparkles,
   ArrowRight,
@@ -34,37 +33,38 @@ export const HomeHub: React.FC = () => {
         </p>
       </div>
 
-      {/* 5 Main Core Action Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
-        {/* 0. 스마트 시간표 */}
+      {/* 4 Main Core Action Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+        {/* 1. 스마트 시간표 */}
         <div
           onClick={() => setTab('timetable')}
-          className="group relative bg-[#13182b] hover:bg-[#181f38] border border-slate-800/80 hover:border-indigo-500/50 rounded-2xl p-5 cursor-pointer transition-all duration-200 hover:-translate-y-1 hover:shadow-xl hover:shadow-indigo-500/10 flex flex-col justify-between"
+          className="group relative bg-[#13182b] hover:bg-[#181f38] border border-slate-800/80 hover:border-indigo-500/50 rounded-2xl p-6 cursor-pointer transition-all duration-200 hover:-translate-y-1 hover:shadow-xl hover:shadow-indigo-500/10 flex flex-col justify-between"
         >
-          <div className="space-y-3">
+          <div className="space-y-4">
             <div className="w-12 h-12 rounded-xl bg-indigo-500/20 border border-indigo-500/40 text-indigo-400 flex items-center justify-center group-hover:scale-110 transition-transform">
               <Calendar className="w-6 h-6" />
             </div>
             <div>
-              <div className="flex items-center gap-1.5">
-                <h3 className="text-lg font-bold text-white group-hover:text-cyan-300 transition-colors">
+              <div className="flex items-center gap-2">
+                <h3 className="text-xl font-bold text-white group-hover:text-cyan-300 transition-colors">
                   스마트 시간표
                 </h3>
                 <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
                   NEW
                 </span>
               </div>
-              <p className="text-xs text-slate-400 mt-1">
+              <p className="text-sm text-slate-400 mt-1">
                 일정 & 과제 퀘스트 연동
               </p>
             </div>
           </div>
-          <div className="pt-4 flex items-center justify-between text-xs font-semibold text-slate-500 group-hover:text-indigo-400 transition-colors">
+          <div className="pt-6 flex items-center justify-between text-xs font-semibold text-slate-500 group-hover:text-indigo-400 transition-colors">
             <span>주간 시간표 보기</span>
             <ArrowRight className="w-4 h-4 transform group-hover:translate-x-1 transition-transform" />
           </div>
         </div>
-        {/* 1. 카테고리 취미 전시관 */}
+
+        {/* 2. 카테고리 취미 전시관 */}
         <div
           onClick={() => setTab('hobby')}
           className="group relative bg-[#13182b] hover:bg-[#181f38] border border-slate-800/80 hover:border-indigo-500/50 rounded-2xl p-6 cursor-pointer transition-all duration-200 hover:-translate-y-1 hover:shadow-xl hover:shadow-indigo-500/10 flex flex-col justify-between"
@@ -88,7 +88,7 @@ export const HomeHub: React.FC = () => {
           </div>
         </div>
 
-        {/* 2. 취미 공유 소모임 */}
+        {/* 3. 취미 공유 소모임 */}
         <div
           onClick={() => setTab('quest')}
           className="group relative bg-[#13182b] hover:bg-[#181f38] border border-slate-800/80 hover:border-cyan-500/50 rounded-2xl p-6 cursor-pointer transition-all duration-200 hover:-translate-y-1 hover:shadow-xl hover:shadow-cyan-500/10 flex flex-col justify-between"
@@ -108,30 +108,6 @@ export const HomeHub: React.FC = () => {
           </div>
           <div className="pt-6 flex items-center justify-between text-xs font-semibold text-slate-500 group-hover:text-cyan-400 transition-colors">
             <span>퀘스트 파티 참여</span>
-            <ArrowRight className="w-4 h-4 transform group-hover:translate-x-1 transition-transform" />
-          </div>
-        </div>
-
-        {/* 3. 개인 프로필 */}
-        <div
-          onClick={() => setTab('profile')}
-          className="group relative bg-[#13182b] hover:bg-[#181f38] border border-slate-800/80 hover:border-emerald-500/50 rounded-2xl p-6 cursor-pointer transition-all duration-200 hover:-translate-y-1 hover:shadow-xl hover:shadow-emerald-500/10 flex flex-col justify-between"
-        >
-          <div className="space-y-4">
-            <div className="w-12 h-12 rounded-xl bg-emerald-500/20 border border-emerald-500/40 text-emerald-400 flex items-center justify-center group-hover:scale-110 transition-transform">
-              <Contact2 className="w-6 h-6" />
-            </div>
-            <div>
-              <h3 className="text-xl font-bold text-white group-hover:text-emerald-300 transition-colors">
-                개인 프로필
-              </h3>
-              <p className="text-sm text-slate-400 mt-1">
-                이름, 취미 및 SNS 연동
-              </p>
-            </div>
-          </div>
-          <div className="pt-6 flex items-center justify-between text-xs font-semibold text-slate-500 group-hover:text-emerald-400 transition-colors">
-            <span>게이머태그 카드</span>
             <ArrowRight className="w-4 h-4 transform group-hover:translate-x-1 transition-transform" />
           </div>
         </div>
